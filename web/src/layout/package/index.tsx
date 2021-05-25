@@ -1,11 +1,10 @@
 import { isArray } from 'lodash';
 import isNull from 'lodash/isNull';
 import isUndefined from 'lodash/isUndefined';
-import map from 'lodash/map';
 import moment from 'moment';
 import React, { useCallback, useEffect, useState } from 'react';
 import { AiOutlineStop } from 'react-icons/ai';
-import { FiPlus } from 'react-icons/fi';
+import { FiCode, FiPlus } from 'react-icons/fi';
 import { IoIosArrowBack } from 'react-icons/io';
 import { Link, useHistory } from 'react-router-dom';
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -18,7 +17,8 @@ import {
   CustomResourcesDefinitionExample,
   ErrorKind,
   FalcoRules,
-  OPAPolicies,
+  FileModalItem,
+  FileModalKind,
   Package,
   RepositoryKind,
   SearchFiltersURL,
@@ -31,6 +31,7 @@ import updateMetaIndex from '../../utils/updateMetaIndex';
 import AnchorHeader from '../common/AnchorHeader';
 import BlockCodeButtons from '../common/BlockCodeButtons';
 import ExternalLink from '../common/ExternalLink';
+import FilesModal from '../common/FilesModal';
 import Image from '../common/Image';
 import Label from '../common/Label';
 import Loading from '../common/Loading';
@@ -46,7 +47,6 @@ import Footer from '../navigation/Footer';
 import SubNavbar from '../navigation/SubNavbar';
 import ChangelogModal from './ChangelogModal';
 import ChartTemplatesModal from './chartTemplates';
-import CustomResourceDefinition from './CustomResourceDefinition';
 import Details from './Details';
 import InstallationModal from './installation/Modal';
 import ModalHeader from './ModalHeader';
@@ -55,7 +55,6 @@ import styles from './PackageView.module.css';
 import ReadmeWrapper from './readme';
 import RecommendedPackages from './RecommendedPackages';
 import RelatedPackages from './RelatedPackages';
-import ResourcesList from './ResourcesList';
 import StarButton from './StarButton';
 import Stats from './Stats';
 import SubscriptionsButton from './SubscriptionsButton';
@@ -186,8 +185,8 @@ const PackageView = (props: Props) => {
     </div>
   );
 
-  const getFalcoRules = (): string | FalcoRules | undefined => {
-    let rules: string | FalcoRules | undefined;
+  const getFalcoRules = (): FileModalItem[] | undefined => {
+    let rules: FileModalItem[] | undefined;
     if (
       !isUndefined(detail) &&
       !isNull(detail) &&
@@ -196,16 +195,26 @@ const PackageView = (props: Props) => {
       !isUndefined(detail.data.rules)
     ) {
       if (isArray(detail.data.rules)) {
-        rules = map(detail.data.rules, 'Raw').join(' ');
+        rules = detail.data.rules.map((item: any, index: number) => {
+          return {
+            name: item.name && item.name !== '' ? item.name : `Rule ${index + 1}`,
+            file: item.Raw,
+          };
+        });
       } else {
-        rules = detail.data.rules as FalcoRules;
+        rules = Object.keys(detail.data.rules).map((rulesFileName: string) => {
+          return {
+            name: rulesFileName,
+            file: (detail!.data!.rules as FalcoRules)[rulesFileName],
+          };
+        });
       }
     }
     return rules;
   };
 
-  const getOPAPolicies = (): OPAPolicies | undefined => {
-    let policies: OPAPolicies | undefined;
+  const getOPAPolicies = (): FileModalItem[] | undefined => {
+    let policies: FileModalItem[] | undefined;
     if (
       !isUndefined(detail) &&
       !isNull(detail) &&
@@ -213,7 +222,12 @@ const PackageView = (props: Props) => {
       !isUndefined(detail.data) &&
       !isUndefined(detail.data.policies)
     ) {
-      policies = detail.data.policies;
+      policies = Object.keys(detail.data.policies).map((policyName: string) => {
+        return {
+          name: policyName,
+          file: detail.data!.policies![policyName],
+        };
+      });
     }
     return policies;
   };
@@ -244,21 +258,6 @@ const PackageView = (props: Props) => {
       });
     }
     return resources;
-  };
-
-  const getCRDsCards = (): JSX.Element | null => {
-    const resources = getCRDs();
-    if (!isUndefined(resources) && resources.length > 0) {
-      return (
-        <div className={`mb-5 ${styles.codeWrapper}`}>
-          <AnchorHeader level={2} scrollIntoView={scrollIntoView} title="Custom Resource Definitions" />
-
-          <CustomResourceDefinition resources={resources} normalizedName={detail!.normalizedName} />
-        </div>
-      );
-    } else {
-      return null;
-    }
   };
 
   const getBadges = (withRepoInfo: boolean, extraStyle?: string): JSX.Element => (
@@ -341,67 +340,6 @@ const PackageView = (props: Props) => {
       <>
         {(() => {
           switch (detail.repository.kind) {
-            case RepositoryKind.Falco:
-              let rules: string | FalcoRules | undefined = getFalcoRules();
-              if (!isUndefined(rules)) {
-                additionalTitles += '# Rules\n';
-              }
-              return (
-                <>
-                  {!isUndefined(rules) && (
-                    <div className={`mb-5 ${styles.codeWrapper}`}>
-                      <AnchorHeader level={2} scrollIntoView={scrollIntoView} title="Rules" />
-
-                      {(() => {
-                        switch (typeof rules) {
-                          case 'string':
-                            return (
-                              <div className="d-flex d-xxl-inline-block mw-100 position-relative">
-                                <BlockCodeButtons content={rules} filename={`${detail.normalizedName}-rules.yaml`} />
-                                <SyntaxHighlighter
-                                  language="yaml"
-                                  style={tomorrowNight}
-                                  customStyle={{ padding: '1.5rem' }}
-                                >
-                                  {rules}
-                                </SyntaxHighlighter>
-                              </div>
-                            );
-                          default:
-                            return (
-                              <ResourcesList
-                                resources={rules}
-                                normalizedName={detail.normalizedName}
-                                kind={detail.repository.kind}
-                              />
-                            );
-                        }
-                      })()}
-                    </div>
-                  )}
-                </>
-              );
-
-            case RepositoryKind.OPA:
-              let policies: OPAPolicies | undefined = getOPAPolicies();
-              if (!isUndefined(policies)) {
-                additionalTitles += '# Policies files\n';
-              }
-              return (
-                <>
-                  {!isUndefined(policies) && (
-                    <div className={`mb-5 ${styles.codeWrapper}`}>
-                      <AnchorHeader level={2} scrollIntoView={scrollIntoView} title="Policies files" />
-                      <ResourcesList
-                        resources={policies}
-                        normalizedName={detail.normalizedName}
-                        kind={detail.repository.kind}
-                      />
-                    </div>
-                  )}
-                </>
-              );
-
             case RepositoryKind.Krew:
               let manifest: string | undefined = getManifestRaw();
               if (!isUndefined(manifest)) {
@@ -423,14 +361,6 @@ const PackageView = (props: Props) => {
                   )}
                 </>
               );
-
-            case RepositoryKind.Helm:
-            case RepositoryKind.OLM:
-              const crds = getCRDsCards();
-              if (!isNull(crds)) {
-                additionalTitles += '# Custom Resource Definitions\n';
-              }
-              return crds;
 
             default:
               return null;
@@ -698,6 +628,63 @@ const PackageView = (props: Props) => {
                                   ? props.visibleTemplate
                                   : undefined
                               }
+                              searchUrlReferer={props.searchUrlReferer}
+                              fromStarredPage={props.fromStarredPage}
+                            />
+                          </div>
+
+                          <div className="d-none d-lg-block">
+                            <FilesModal
+                              kind={FileModalKind.CustomResourcesDefinition}
+                              language="yaml"
+                              visibleModal={!isUndefined(props.visibleModal) && props.visibleModal === 'CRDs'}
+                              btnModalContent={
+                                <div className="d-flex flex-row align-items-center justify-content-center">
+                                  <FiCode />
+                                  <span className="ml-2 font-weight-bold text-uppercase">CRDs</span>
+                                </div>
+                              }
+                              normalizedName={detail.normalizedName}
+                              title="Custom Resources Definition"
+                              files={getCRDs() as any}
+                              searchUrlReferer={props.searchUrlReferer}
+                              fromStarredPage={props.fromStarredPage}
+                            />
+                          </div>
+
+                          <div className="d-none d-lg-block">
+                            <FilesModal
+                              kind={FileModalKind.Rules}
+                              language="yaml"
+                              visibleModal={false}
+                              btnModalContent={
+                                <div className="d-flex flex-row align-items-center justify-content-center">
+                                  <FiCode />
+                                  <span className="ml-2 font-weight-bold text-uppercase">Rules</span>
+                                </div>
+                              }
+                              normalizedName={detail.normalizedName}
+                              title="Rules"
+                              files={getFalcoRules() as any}
+                              searchUrlReferer={props.searchUrlReferer}
+                              fromStarredPage={props.fromStarredPage}
+                            />
+                          </div>
+
+                          <div className="d-none d-lg-block">
+                            <FilesModal
+                              kind={FileModalKind.Policy}
+                              language="text"
+                              visibleModal={false}
+                              btnModalContent={
+                                <div className="d-flex flex-row align-items-center justify-content-center">
+                                  <FiCode />
+                                  <span className="ml-2 font-weight-bold text-uppercase">Policies</span>
+                                </div>
+                              }
+                              normalizedName={detail.normalizedName}
+                              title="Policies"
+                              files={getOPAPolicies() as any}
                               searchUrlReferer={props.searchUrlReferer}
                               fromStarredPage={props.fromStarredPage}
                             />

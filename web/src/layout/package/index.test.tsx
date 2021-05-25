@@ -276,11 +276,11 @@ describe('Package index', () => {
   });
 
   describe('Helm package', () => {
-    it('renders CRDs when are defined', async () => {
+    it('renders CRDs button when are defined', async () => {
       const mockPackage = getMockPackage('10');
       mocked(API).getPackage.mockResolvedValue(mockPackage);
 
-      const { getByText, getByTestId } = render(
+      const { getByText } = render(
         <Router>
           <PackageView {...defaultProps} />
         </Router>
@@ -290,17 +290,16 @@ describe('Package index', () => {
         expect(API.getPackage).toHaveBeenCalledTimes(1);
       });
 
-      expect(getByText('Custom Resource Definitions')).toBeInTheDocument();
-      expect(getByTestId('resourceDefinition')).toBeInTheDocument();
+      expect(getByText('CRDs')).toBeInTheDocument();
     });
   });
 
   describe('OLM package', () => {
-    it('renders CRDs from crds prop when is defined', async () => {
+    it('renders CRDs button from crds prop when is defined', async () => {
       const mockPackage = getMockPackage('11');
       mocked(API).getPackage.mockResolvedValue(mockPackage);
 
-      const { getByText, getAllByTestId } = render(
+      const { getByText } = render(
         <Router>
           <PackageView {...defaultProps} />
         </Router>
@@ -310,8 +309,7 @@ describe('Package index', () => {
         expect(API.getPackage).toHaveBeenCalledTimes(1);
       });
 
-      expect(getByText('Custom Resource Definitions')).toBeInTheDocument();
-      expect(getAllByTestId('resourceDefinition')).toHaveLength(1);
+      expect(getByText('CRDs')).toBeInTheDocument();
     });
   });
 
@@ -332,8 +330,6 @@ describe('Package index', () => {
 
       expect(getByTestId('mainPackage')).toBeInTheDocument();
       expect(getByText('Rules')).toBeInTheDocument();
-      expect(getAllByTestId('ctcBtn')).toHaveLength(2);
-      expect(getByTestId('downloadBtn')).toBeInTheDocument();
     });
   });
 
