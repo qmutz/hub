@@ -14,6 +14,7 @@ import Loading from './Loading';
 import Modal from './Modal';
 
 interface Props {
+  packageId: string;
   kind: FileModalKind;
   language: string;
   visibleModal: boolean;
@@ -33,13 +34,14 @@ const FILE_TYPE = {
 
 const FilesModal = (props: Props) => {
   const history = useHistory();
-  const anchor = useRef<HTMLDivElement>(null);
+  // const anchor = useRef<HTMLDivElement>(null);
   const [openStatus, setOpenStatus] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [isChangingSelectedItem, setIsChangingSelectedItem] = useState<boolean>(false);
   const [code, setCode] = useState<string | undefined>(undefined);
   const [inputValue, setInputValue] = useState<string>('');
   const [visibleFiles, setVisibleFiles] = useState<any[]>(props.files || []);
+  const [currentPkgId, setCurrentPkgId] = useState<string>(props.packageId);
 
   const onItemChange = useCallback(
     (file: any | null) => {
@@ -128,26 +130,26 @@ const FilesModal = (props: Props) => {
   //   });
   // };
 
-  // const cleanUrl = () => {
-  //   history.replace({
-  //     search: '',
-  //     state: { searchUrlReferer: props.searchUrlReferer, fromStarredPage: props.fromStarredPage },
-  //   });
-  // };
+  const cleanUrl = () => {
+    history.replace({
+      search: '',
+      state: { searchUrlReferer: props.searchUrlReferer, fromStarredPage: props.fromStarredPage },
+    });
+  };
 
-  // useEffect(() => {
-  //   if (props.visibleChartTemplates && !openStatus && props.repoKind === RepositoryKind.Helm) {
-  //     onOpenModal();
-  //   } else {
-  //     cleanUrl();
-  //   }
-  // }, []); /* eslint-disable-line react-hooks/exhaustive-deps */
+  useEffect(() => {
+    if (props.visibleModal && !openStatus && props.files && props.files.length > 0) {
+      onOpenModal();
+    } else {
+      cleanUrl();
+    }
+  }, []); /* eslint-disable-line react-hooks/exhaustive-deps */
 
-  // useEffect(() => {
-  //   if (props.packageId !== currentPkgId && openStatus) {
-  //     setOpenStatus(false);
-  //   }
-  // }, [props.packageId]); /* eslint-disable-line react-hooks/exhaustive-deps */
+  useEffect(() => {
+    if (props.packageId !== currentPkgId && openStatus) {
+      setOpenStatus(false);
+    }
+  }, [props.packageId]); /* eslint-disable-line react-hooks/exhaustive-deps */
 
   if (isUndefined(props.files)) return null;
 
@@ -164,6 +166,7 @@ const FilesModal = (props: Props) => {
 
   const onOpenModal = () => {
     if (props.files && props.files.length > 0) {
+      setCurrentPkgId(props.packageId);
       setSelectedItem(props.files[0]);
       setVisibleFiles(props.files);
       onItemChange(props.files[0]);
@@ -207,7 +210,7 @@ const FilesModal = (props: Props) => {
         >
           <div className="h-100 mw-100">
             <div className="d-flex flex-row align-items-strecht no-gutters h-100 mh-100">
-              <div className="col-3 h-100">
+              <div className="col-3 h-100 overflow-auto">
                 <div className="position-relative w-100">
                   <div className="form-group input-group-sm">
                     <input

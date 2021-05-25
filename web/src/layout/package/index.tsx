@@ -636,6 +636,7 @@ const PackageView = (props: Props) => {
                           <div className="d-none d-lg-block">
                             <FilesModal
                               kind={FileModalKind.CustomResourcesDefinition}
+                              packageId={detail.packageId}
                               language="yaml"
                               visibleModal={!isUndefined(props.visibleModal) && props.visibleModal === 'CRDs'}
                               btnModalContent={
@@ -655,6 +656,7 @@ const PackageView = (props: Props) => {
                           <div className="d-none d-lg-block">
                             <FilesModal
                               kind={FileModalKind.Rules}
+                              packageId={detail.packageId}
                               language="yaml"
                               visibleModal={false}
                               btnModalContent={
@@ -674,6 +676,7 @@ const PackageView = (props: Props) => {
                           <div className="d-none d-lg-block">
                             <FilesModal
                               kind={FileModalKind.Policy}
+                              packageId={detail.packageId}
                               language="text"
                               visibleModal={false}
                               btnModalContent={
