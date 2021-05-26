@@ -2893,7 +2893,7 @@ components:
                         type: object
                         nullable: false
                         properties:
-                          name:
+                          Name:
                             type: string
                           Raw:
                             type: string

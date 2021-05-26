@@ -156,7 +156,7 @@ export interface RecommendedPackage {
 
 export interface PackageData {
   policies?: OPAPolicies;
-  rules?: { Raw: string; name: string }[] | FalcoRules;
+  rules?: { Raw: string; Name: string }[] | FalcoRules;
   dependencies?: Dependency[];
   customResourcesDefinitionsExamples?: string;
   customResourcesDefinitions?: CustomResourcesDefinition[];

@@ -72,6 +72,7 @@ interface Props {
   visibleModal?: string;
   visibleValuesSchemaPath?: string;
   visibleTemplate?: string;
+  visibleFile?: string;
 }
 
 const PackageView = (props: Props) => {
@@ -197,7 +198,10 @@ const PackageView = (props: Props) => {
       if (isArray(detail.data.rules)) {
         rules = detail.data.rules.map((item: any, index: number) => {
           return {
-            name: item.name && item.name !== '' ? item.name : `Rule ${index + 1}`,
+            name:
+              item.Name && item.Name !== ''
+                ? item.Name
+                : `rules${detail!.data!.rules!.length === 1 ? '' : `-${index + 1}`}`,
             file: item.Raw,
           };
         });
@@ -637,8 +641,14 @@ const PackageView = (props: Props) => {
                             <FilesModal
                               kind={FileModalKind.CustomResourcesDefinition}
                               packageId={detail.packageId}
+                              modalName="CRDs"
                               language="yaml"
                               visibleModal={!isUndefined(props.visibleModal) && props.visibleModal === 'CRDs'}
+                              visibleFile={
+                                !isUndefined(props.visibleModal) && props.visibleModal === 'CRDs'
+                                  ? props.visibleFile
+                                  : undefined
+                              }
                               btnModalContent={
                                 <div className="d-flex flex-row align-items-center justify-content-center">
                                   <FiCode />
@@ -657,8 +667,14 @@ const PackageView = (props: Props) => {
                             <FilesModal
                               kind={FileModalKind.Rules}
                               packageId={detail.packageId}
+                              modalName="rules"
                               language="yaml"
-                              visibleModal={false}
+                              visibleModal={!isUndefined(props.visibleModal) && props.visibleModal === 'rules'}
+                              visibleFile={
+                                !isUndefined(props.visibleModal) && props.visibleModal === 'rules'
+                                  ? props.visibleFile
+                                  : undefined
+                              }
                               btnModalContent={
                                 <div className="d-flex flex-row align-items-center justify-content-center">
                                   <FiCode />
@@ -677,8 +693,14 @@ const PackageView = (props: Props) => {
                             <FilesModal
                               kind={FileModalKind.Policy}
                               packageId={detail.packageId}
+                              modalName="policies"
                               language="text"
-                              visibleModal={false}
+                              visibleModal={!isUndefined(props.visibleModal) && props.visibleModal === 'policies'}
+                              visibleFile={
+                                !isUndefined(props.visibleModal) && props.visibleModal === 'policies'
+                                  ? props.visibleFile
+                                  : undefined
+                              }
                               btnModalContent={
                                 <div className="d-flex flex-row align-items-center justify-content-center">
                                   <FiCode />

@@ -1,10 +1,10 @@
 import classnames from 'classnames';
 import { isNull, isUndefined } from 'lodash';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
 import { useHistory } from 'react-router-dom';
-import { docco } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import SyntaxHighlighter from 'react-syntax-highlighter';
+import { docco } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import YAML from 'yaml';
 
 import { CustomResourcesDefinition, FileModalKind, SearchFiltersURL } from '../../types';
@@ -17,7 +17,9 @@ interface Props {
   packageId: string;
   kind: FileModalKind;
   language: string;
+  modalName: string;
   visibleModal: boolean;
+  visibleFile?: string;
   btnModalContent: JSX.Element;
   normalizedName: string;
   title: string;
@@ -34,7 +36,7 @@ const FILE_TYPE = {
 
 const FilesModal = (props: Props) => {
   const history = useHistory();
-  // const anchor = useRef<HTMLDivElement>(null);
+  const anchor = useRef<HTMLDivElement>(null);
   const [openStatus, setOpenStatus] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [isChangingSelectedItem, setIsChangingSelectedItem] = useState<boolean>(false);
@@ -43,35 +45,40 @@ const FilesModal = (props: Props) => {
   const [visibleFiles, setVisibleFiles] = useState<any[]>(props.files || []);
   const [currentPkgId, setCurrentPkgId] = useState<string>(props.packageId);
 
-  const onItemChange = useCallback(
-    (file: any | null) => {
-      setIsChangingSelectedItem(true);
-      setSelectedItem(file);
-      const getContent = (): string | undefined => {
-        let content: string | undefined;
-        switch (props.kind) {
-          case FileModalKind.CustomResourcesDefinition:
-            if (!isNull(file) && !isUndefined(file.example)) {
-              content = YAML.stringify(file.example, { sortMapEntries: true });
-            }
-            break;
-          default:
-            content = file.file;
-            break;
-        }
-
-        return content;
-      };
-
-      if (!isNull(file)) {
-        setCode(getContent());
-      } else {
-        setCode(undefined);
+  const onItemChange = (file: any | null) => {
+    setIsChangingSelectedItem(true);
+    setSelectedItem(file);
+    updateUrl(file ? file.name : undefined);
+    const getContent = (): string | undefined => {
+      let content: string | undefined;
+      switch (props.kind) {
+        case FileModalKind.CustomResourcesDefinition:
+          if (!isNull(file) && !isUndefined(file.example)) {
+            content = YAML.stringify(file.example, { sortMapEntries: true });
+          }
+          break;
+        default:
+          content = file.file;
+          break;
       }
-      setIsChangingSelectedItem(false);
-    },
-    [props.kind]
-  );
+
+      return content;
+    };
+
+    if (!isNull(file)) {
+      setCode(getContent());
+      if (anchor && anchor.current) {
+        anchor.current.scrollIntoView({
+          block: 'start',
+          inline: 'nearest',
+          behavior: 'smooth',
+        });
+      }
+    } else {
+      setCode(undefined);
+    }
+    setIsChangingSelectedItem(false);
+  };
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
@@ -117,18 +124,12 @@ const FilesModal = (props: Props) => {
     }
   }, [inputValue]); /* eslint-disable-line react-hooks/exhaustive-deps */
 
-  useEffect(() => {
-    if (props.files) {
-      onItemChange(props.files[0]);
-    }
-  }, [onItemChange, props.files]);
-
-  // const updateUrl = (templateName?: string) => {
-  //   history.replace({
-  //     search: `?modal=template${templateName ? `&template=${templateName}` : ''}`,
-  //     state: { searchUrlReferer: props.searchUrlReferer, fromStarredPage: props.fromStarredPage },
-  //   });
-  // };
+  const updateUrl = (fileName?: string) => {
+    history.replace({
+      search: `?modal=${props.modalName}${fileName ? `&file=${fileName}` : ''}`,
+      state: { searchUrlReferer: props.searchUrlReferer, fromStarredPage: props.fromStarredPage },
+    });
+  };
 
   const cleanUrl = () => {
     history.replace({
@@ -140,14 +141,17 @@ const FilesModal = (props: Props) => {
   useEffect(() => {
     if (props.visibleModal && !openStatus && props.files && props.files.length > 0) {
       onOpenModal();
-    } else {
-      cleanUrl();
     }
   }, []); /* eslint-disable-line react-hooks/exhaustive-deps */
 
   useEffect(() => {
-    if (props.packageId !== currentPkgId && openStatus) {
-      setOpenStatus(false);
+    if (props.packageId !== currentPkgId) {
+      setCurrentPkgId(props.packageId);
+      if (openStatus) {
+        setOpenStatus(false);
+      } else if (!openStatus && props.visibleModal) {
+        onOpenModal();
+      }
     }
   }, [props.packageId]); /* eslint-disable-line react-hooks/exhaustive-deps */
 
@@ -158,7 +162,9 @@ const FilesModal = (props: Props) => {
       case FileModalKind.CustomResourcesDefinition:
         return `${props.normalizedName}-${selectedItem.kind}.yaml`;
       case FileModalKind.Rules:
-        return `${props.normalizedName}-${selectedItem.name.replace(/ /g, '')}.yaml`;
+        return `${selectedItem.name.includes(props.normalizedName) ? '' : `${props.normalizedName}-`}${selectedItem.name
+          .replace(/ /g, '')
+          .replace('.yaml', '')}.yaml`;
       case FileModalKind.Policy:
         return `${props.normalizedName}-${selectedItem.name}`;
     }
@@ -166,11 +172,18 @@ const FilesModal = (props: Props) => {
 
   const onOpenModal = () => {
     if (props.files && props.files.length > 0) {
-      setCurrentPkgId(props.packageId);
-      setSelectedItem(props.files[0]);
       setVisibleFiles(props.files);
-      onItemChange(props.files[0]);
+      let currentActiveFile = props.files[0];
+      if (props.visibleFile) {
+        const visibleFile = props.files.find((file: any) => file.name === props.visibleFile);
+        if (visibleFile) {
+          currentActiveFile = visibleFile;
+        }
+      }
+      onItemChange(currentActiveFile);
       setOpenStatus(true);
+    } else {
+      cleanUrl();
     }
   };
 
@@ -179,10 +192,7 @@ const FilesModal = (props: Props) => {
     setSelectedItem(null);
     setCode(undefined);
     setInputValue('');
-    history.replace({
-      search: '',
-      state: { searchUrlReferer: props.searchUrlReferer, fromStarredPage: props.fromStarredPage },
-    });
+    cleanUrl();
   };
 
   return (
@@ -347,31 +357,39 @@ const FilesModal = (props: Props) => {
                         })()}
                       </>
                     )}
-                    <div className={`position-relative flex-grow-1 overflow-auto ${styles.syntaxWrapper}`}>
-                      {code && !isNull(selectedItem) ? (
+                    <div className="position-relative flex-grow-1 h-100">
+                      {visibleFiles.length > 0 && (
                         <>
-                          <BlockCodeButtons filename={getSelectedFileName()} content={code} />
+                          {code && !isNull(selectedItem) ? (
+                            <>
+                              <BlockCodeButtons filename={getSelectedFileName()} content={code} />
+                              <div className="position-relative overflow-auto h-100">
+                                <div className={`position-absolute ${styles.anchor}`} ref={anchor} />
 
-                          <SyntaxHighlighter
-                            language={props.language}
-                            style={docco}
-                            customStyle={{
-                              backgroundColor: 'transparent',
-                              padding: '1.5rem',
-                              marginBottom: '0',
-                              height: '100%',
-                              fontSize: '75%',
-                            }}
-                            lineNumberStyle={{ color: 'gray', marginRight: '15px' }}
-                            showLineNumbers
-                          >
-                            {code}
-                          </SyntaxHighlighter>
+                                <SyntaxHighlighter
+                                  language={props.language}
+                                  style={docco}
+                                  customStyle={{
+                                    backgroundColor: 'transparent',
+                                    padding: '1.5rem',
+                                    marginBottom: '0',
+                                    height: '100%',
+                                    fontSize: '75%',
+                                    overflow: 'initial',
+                                  }}
+                                  lineNumberStyle={{ color: 'gray', marginRight: '15px' }}
+                                  showLineNumbers
+                                >
+                                  {code}
+                                </SyntaxHighlighter>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="font-italic d-flex align-items-center justify-content-center h-100">
+                              No example provided
+                            </div>
+                          )}
                         </>
-                      ) : (
-                        <div className="font-italic d-flex align-items-center justify-content-center h-100">
-                          No example provided
-                        </div>
                       )}
                     </div>
                   </div>

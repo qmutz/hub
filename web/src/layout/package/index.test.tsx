@@ -318,7 +318,7 @@ describe('Package index', () => {
       const mockPackage = getMockPackage('12');
       mocked(API).getPackage.mockResolvedValue(mockPackage);
 
-      const { getAllByTestId, getByTestId, getByText } = render(
+      const { getByTestId, getByText } = render(
         <Router>
           <PackageView {...defaultProps} />
         </Router>
