@@ -24,18 +24,18 @@ const TektonManifestModal = (props: Props) => {
         data-testid="tektonManifestBtn"
         className="btn btn-secondary btn-block btn-sm text-nowrap"
         onClick={() => setOpenStatus(true)}
-        aria-label="Open Manifest YAML"
+        aria-label="Open Manifest"
       >
         <div className="d-flex flex-row align-items-center justify-content-center text-uppercase">
           <GoFileCode />
-          <span className="ml-2 font-weight-bold">Manifest YAML</span>
+          <span className="ml-2 font-weight-bold">Manifest</span>
         </div>
       </button>
 
       {openStatus && (
         <Modal
           modalDialogClassName={styles.modalDialog}
-          header={<div className={`h3 m-2 flex-grow-1 ${styles.title}`}>Manifest YAML</div>}
+          header={<div className={`h3 m-2 flex-grow-1 ${styles.title}`}>Manifest</div>}
           onClose={() => setOpenStatus(false)}
           open={openStatus}
         >

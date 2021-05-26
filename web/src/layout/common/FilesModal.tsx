@@ -29,9 +29,18 @@ interface Props {
 }
 
 const FILE_TYPE = {
-  [FileModalKind.CustomResourcesDefinition]: 'resources',
-  [FileModalKind.Policy]: 'policies',
-  [FileModalKind.Rules]: 'rules',
+  [FileModalKind.CustomResourcesDefinition]: {
+    singular: 'resource',
+    plural: 'resources',
+  },
+  [FileModalKind.Policy]: {
+    singular: 'policy',
+    plural: 'policies',
+  },
+  [FileModalKind.Rules]: {
+    singular: 'rules',
+    plural: 'rules',
+  },
 };
 
 const FilesModal = (props: Props) => {
@@ -162,9 +171,7 @@ const FilesModal = (props: Props) => {
       case FileModalKind.CustomResourcesDefinition:
         return `${props.normalizedName}-${selectedItem.kind}.yaml`;
       case FileModalKind.Rules:
-        return `${selectedItem.name.includes(props.normalizedName) ? '' : `${props.normalizedName}-`}${selectedItem.name
-          .replace(/ /g, '')
-          .replace('.yaml', '')}.yaml`;
+        return `${props.normalizedName}-${selectedItem.name.replace('.yaml', '')}.yaml`;
       case FileModalKind.Policy:
         return `${props.normalizedName}-${selectedItem.name}`;
     }
@@ -220,7 +227,7 @@ const FilesModal = (props: Props) => {
         >
           <div className="h-100 mw-100">
             <div className="d-flex flex-row align-items-strecht no-gutters h-100 mh-100">
-              <div className="col-3 h-100 overflow-auto">
+              <div className="col-3 h-100 overflow-auto pr-2">
                 <div className="position-relative w-100">
                   <div className="form-group input-group-sm">
                     <input
@@ -240,7 +247,7 @@ const FilesModal = (props: Props) => {
                     <div className="alert p-0 mt-3">
                       <small className="text-muted text-break font-italic">
                         This package version contains <span className="font-weight-bold">{props.files.length}</span>{' '}
-                        {FILE_TYPE[props.kind]}
+                        {FILE_TYPE[props.kind][props.files.length === 1 ? 'singular' : 'plural']}
                       </small>
                     </div>
                   </div>
@@ -281,7 +288,7 @@ const FilesModal = (props: Props) => {
                                   const resource = file as CustomResourcesDefinition;
                                   return (
                                     <>
-                                      <div className="d-flex flex-row align-items-baseline mb-1">
+                                      <div className="d-flex flex-row align-items-baseline my-1">
                                         <div className={styles.legend}>
                                           <small className="text-muted text-uppercase">Kind:</small>
                                         </div>
@@ -302,8 +309,8 @@ const FilesModal = (props: Props) => {
                                 default:
                                   return (
                                     <div className="d-flex flex-row align-items-baseline mb-1">
-                                      <div className={styles.legend}>
-                                        <small className="text-muted text-uppercase">Name:</small>
+                                      <div>
+                                        <small className="text-muted text-uppercase mr-2">Name:</small>
                                       </div>
                                       <div className={`text-truncate ${styles.btnItemContent}`}>{file.name}</div>
                                     </div>
@@ -357,13 +364,13 @@ const FilesModal = (props: Props) => {
                         })()}
                       </>
                     )}
-                    <div className="position-relative flex-grow-1 h-100">
+                    <div className="position-relative flex-grow-1 overflow-hidden">
                       {visibleFiles.length > 0 && (
                         <>
                           {code && !isNull(selectedItem) ? (
                             <>
                               <BlockCodeButtons filename={getSelectedFileName()} content={code} />
-                              <div className="position-relative overflow-auto h-100">
+                              <div className={`position-relative overflow-auto h-100 ${styles.fileWrapper}`}>
                                 <div className={`position-absolute ${styles.anchor}`} ref={anchor} />
 
                                 <SyntaxHighlighter
@@ -372,12 +379,18 @@ const FilesModal = (props: Props) => {
                                   customStyle={{
                                     backgroundColor: 'transparent',
                                     padding: '1.5rem',
+                                    lineHeight: '1.25rem',
                                     marginBottom: '0',
                                     height: '100%',
-                                    fontSize: '75%',
+                                    fontSize: '80%',
                                     overflow: 'initial',
+                                    color: '#636a6e',
                                   }}
-                                  lineNumberStyle={{ color: 'gray', marginRight: '15px' }}
+                                  lineNumberStyle={{
+                                    color: 'var(--color-black-25)',
+                                    marginRight: '5px',
+                                    fontSize: '0.8rem',
+                                  }}
                                   showLineNumbers
                                 >
                                   {code}
@@ -385,7 +398,7 @@ const FilesModal = (props: Props) => {
                               </div>
                             </>
                           ) : (
-                            <div className="font-italic d-flex align-items-center justify-content-center h-100">
+                            <div className="font-italic d-flex align-items-center justify-content-center h-100 h3">
                               No example provided
                             </div>
                           )}

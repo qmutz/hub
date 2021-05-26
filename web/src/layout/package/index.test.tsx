@@ -348,7 +348,7 @@ describe('Package index', () => {
         expect(API.getPackage).toHaveBeenCalledTimes(1);
       });
 
-      expect(getByText('Manifest YAML')).toBeInTheDocument();
+      expect(getByText('Manifest')).toBeInTheDocument();
       expect(getByTestId('tektonManifestBtn')).toBeInTheDocument();
     });
 
