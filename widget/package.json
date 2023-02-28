@@ -6,7 +6,7 @@
     "@types/lodash": "^4.14.168",
     "@types/react": "^16.9.49",
     "@types/react-dom": "^16.9.8",
-    "@types/styled-components": "^5.1.9",
+    "@types/styled-components": "^5.1.26",
     "lodash": "^4.17.20",
     "moment": "^2.27.0",
     "react": "^17.0.2",
