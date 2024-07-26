@@ -19,7 +19,7 @@
     "@types/semver": "^7.3.3",
     "analytics": "^0.3.5",
     "apexcharts": "^3.26.0",
-    "bootstrap": "^4.5.2",
+    "bootstrap": "^5.0.0",
     "classnames": "^2.2.6",
     "codemirror": "^5.57.0",
     "codemirror-rego": "^1.1.0",
